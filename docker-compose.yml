@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+
+  auth:
+    build: auth/.
+    networks:
+      - "backend"
+    expose:
+      - "3001"
+      - "9229"
+    ports:
+      - 9229:9229
+      - 3001:3001
+    volumes:
+      - ./auth:/app
+    restart: "on-failure"
+
+  app:
+    build: app/.   
+    networks:
+      - "backend"
+    expose:
+      - "3000"
+      - "9228"
+    ports:
+      - 9228:9228
+      - 3000:3000
+    depends_on:
+      - "db"
+    environment:
+      URL: "0.0.0.0"
+      PORT: "3000"
+      DB_NAME: "sandbox"
+      DB_HOST: "db"
+      DB_PORT: "3306"
+      DB_USER: "sandbox_user"
+      DB_PASSWORD: "passpass"
+    restart: "on-failure"
+    volumes:
+      - ./app:/app
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sandbox
+      MYSQL_USER: sandbox_user
+      MYSQL_PASSWORD: passpass
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - '3307:3307'
+    volumes:
+      - './docker/db/data:/var/lib/mysql'
+    networks:
+      - "backend"
+    restart: "on-failure"
+
+networks:
+  backend:
+    driver: bridge
